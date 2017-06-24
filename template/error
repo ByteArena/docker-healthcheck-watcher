@@ -1,0 +1,7 @@
+An error occurred.
+
+Service: {{.ServiceName}}
+Status: {{.ServiceStatus}}
+
+Log:
+{{.Log}}
