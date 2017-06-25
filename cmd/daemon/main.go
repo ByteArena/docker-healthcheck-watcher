@@ -49,9 +49,16 @@ func onContainerHealthCheckFailure(sns *sdk.SNS, service string) {
 }
 
 func NewSNSClient() *sdk.SNS {
+	creds := credentials.NewEnvCredentials()
+
+	_, err := creds.Get()
+	if err != nil {
+		log.Panicln(err)
+	}
+
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		Config: aws.Config{
-			Credentials: credentials.NewEnvCredentials(),
+			Credentials: creds,
 			Region:      aws.String("eu-west-1"),
 		},
 	}))
