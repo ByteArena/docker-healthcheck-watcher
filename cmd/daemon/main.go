@@ -45,7 +45,7 @@ func onContainerDieFailure(sns *sdk.SNS, service string) {
 		log.Panicln(err)
 	}
 
-	log.Println(service, "failure, sent message", output.MessageId)
+	log.Println(service, "failure, sent message", (*output.MessageId))
 }
 
 func onContainerHealthCheckFailure(sns *sdk.SNS, service string) {
@@ -69,7 +69,7 @@ func onContainerHealthCheckFailure(sns *sdk.SNS, service string) {
 		log.Panicln(err)
 	}
 
-	log.Println(service, "failure, sent message", output.MessageId)
+	log.Println(service, "failure, sent message", (*output.MessageId))
 }
 
 func NewSNSClient() *sdk.SNS {
