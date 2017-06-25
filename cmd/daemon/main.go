@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	sdk "github.com/aws/aws-sdk-go/service/sns"
 	"github.com/docker/docker/api/types"
@@ -44,12 +45,15 @@ func onContainerHealthCheckFailure(sns *sdk.SNS, service string) {
 		log.Panicln(err)
 	}
 
-	log.Println(service, " failure, sent message", output.MessageId)
+	log.Println(service, "failure, sent message", output.MessageId)
 }
 
 func NewSNSClient() *sdk.SNS {
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
-		Config: aws.Config{Region: aws.String("eu-west-1")},
+		Config: aws.Config{
+			Credentials: credentials.NewEnvCredentials(),
+			Region:      aws.String("eu-west-1"),
+		},
 	}))
 
 	return sdk.New(sess)
