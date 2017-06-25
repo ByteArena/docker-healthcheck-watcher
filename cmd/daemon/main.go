@@ -24,6 +24,30 @@ func newTopicArn(str string) *string {
 	return &str
 }
 
+func onContainerDieFailure(sns *sdk.SNS, service string) {
+	errorMessage := t.ErrorMessage{
+		ServiceName:   service,
+		ServiceStatus: "died",
+		Log:           "",
+	}
+
+	message := template.MakeTemplate(errorMessage)
+
+	topicArn := os.Getenv("TOPIC_ARN")
+	msg := sdk.PublishInput{
+		TopicArn: newTopicArn(topicArn),
+		Message:  newMessage(message),
+	}
+
+	output, err := sns.Publish(&msg)
+
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	log.Println(service, "failure, sent message", output.MessageId)
+}
+
 func onContainerHealthCheckFailure(sns *sdk.SNS, service string) {
 	errorMessage := t.ErrorMessage{
 		ServiceName:   service,
@@ -85,6 +109,10 @@ func main() {
 		case msg := <-stream:
 			if msg.Action == "health_status: unhealthy" {
 				onContainerHealthCheckFailure(snsClient, msg.Actor.Attributes["image"])
+			}
+
+			if msg.Action == "die" {
+				onContainerDieFailure(snsClient, msg.Actor.Attributes["image"])
 			}
 		}
 	}
