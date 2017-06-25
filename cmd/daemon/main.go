@@ -24,10 +24,10 @@ func newTopicArn(str string) *string {
 	return &str
 }
 
-func onContainerDieFailure(sns *sdk.SNS, service string) {
+func onContainerDieFailure(sns *sdk.SNS, service string, exitCode string) {
 	errorMessage := t.ErrorMessage{
 		ServiceName:   service,
-		ServiceStatus: "died",
+		ServiceStatus: "died (exited with code " + exitCode + ")",
 		Log:           "",
 	}
 
@@ -112,7 +112,11 @@ func main() {
 			}
 
 			if msg.Action == "die" {
-				onContainerDieFailure(snsClient, msg.Actor.Attributes["image"])
+				exitCode := msg.Actor.Attributes["exitCode"]
+
+				if exitCode != "0" {
+					onContainerDieFailure(snsClient, msg.Actor.Attributes["image"], exitCode)
+				}
 			}
 		}
 	}
