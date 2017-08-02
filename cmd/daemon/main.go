@@ -5,26 +5,15 @@ import (
 	"log"
 	"os"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	sdk "github.com/aws/aws-sdk-go/service/sns"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 
+	"github.com/bytearena/docker-healthcheck-watcher/integration"
 	"github.com/bytearena/docker-healthcheck-watcher/template"
 	t "github.com/bytearena/docker-healthcheck-watcher/types"
 )
 
-func newMessage(str string) *string {
-	return &str
-}
-
-func newTopicArn(str string) *string {
-	return &str
-}
-
-func onContainerDieFailure(sns *sdk.SNS, service string, exitCode string) {
+func onContainerDieFailure(service string, exitCode string) {
 	errorMessage := t.ErrorMessage{
 		ServiceName:   service,
 		ServiceStatus: "died (exited with code " + exitCode + ")",
@@ -33,22 +22,12 @@ func onContainerDieFailure(sns *sdk.SNS, service string, exitCode string) {
 
 	message := template.MakeTemplate(errorMessage)
 
-	topicArn := os.Getenv("TOPIC_ARN")
-	msg := sdk.PublishInput{
-		TopicArn: newTopicArn(topicArn),
-		Message:  newMessage(message),
-	}
+	output := slack.Publish(message)
 
-	output, err := sns.Publish(&msg)
-
-	if err != nil {
-		log.Panicln(err)
-	}
-
-	log.Println(service, "failure, sent message", (*output.MessageId))
+	log.Println(service, "failure, sent message", output)
 }
 
-func onContainerHealthCheckFailure(sns *sdk.SNS, service string) {
+func onContainerHealthCheckFailure(service string) {
 	errorMessage := t.ErrorMessage{
 		ServiceName:   service,
 		ServiceStatus: "unhealthy (running)",
@@ -57,37 +36,9 @@ func onContainerHealthCheckFailure(sns *sdk.SNS, service string) {
 
 	message := template.MakeTemplate(errorMessage)
 
-	topicArn := os.Getenv("TOPIC_ARN")
-	msg := sdk.PublishInput{
-		TopicArn: newTopicArn(topicArn),
-		Message:  newMessage(message),
-	}
+	output := slack.Publish(message)
 
-	output, err := sns.Publish(&msg)
-
-	if err != nil {
-		log.Panicln(err)
-	}
-
-	log.Println(service, "failure, sent message", (*output.MessageId))
-}
-
-func NewSNSClient() *sdk.SNS {
-	creds := credentials.NewEnvCredentials()
-
-	_, err := creds.Get()
-	if err != nil {
-		log.Panicln(err)
-	}
-
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
-		Config: aws.Config{
-			Credentials: creds,
-			Region:      aws.String("eu-west-1"),
-		},
-	}))
-
-	return sdk.New(sess)
+	log.Println(service, "failure, sent message", output)
 }
 
 func main() {
@@ -100,22 +51,20 @@ func main() {
 
 	stream, err := cli.Events(ctx, types.EventsOptions{})
 
-	snsClient := NewSNSClient()
-
 	for {
 		select {
 		case msg := <-err:
 			log.Panicln(msg)
 		case msg := <-stream:
 			if msg.Action == "health_status: unhealthy" {
-				onContainerHealthCheckFailure(snsClient, msg.Actor.Attributes["image"])
+				onContainerHealthCheckFailure(msg.Actor.Attributes["image"])
 			}
 
 			if msg.Action == "die" {
 				exitCode := msg.Actor.Attributes["exitCode"]
 
 				if exitCode != "0" {
-					onContainerDieFailure(snsClient, msg.Actor.Attributes["image"], exitCode)
+					onContainerDieFailure(msg.Actor.Attributes["image"], exitCode)
 				}
 			}
 		}
