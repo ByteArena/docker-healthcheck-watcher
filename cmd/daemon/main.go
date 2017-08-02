@@ -29,7 +29,7 @@ func onContainerDieFailure(service string, exitCode string) {
 
 func onContainerHealthy(service string) {
 	errorMessage := t.ErrorMessage{
-		Emoji:         ":ok_hand:",
+		Emoji:         ":+1:",
 		ServiceName:   service,
 		ServiceStatus: "ok",
 		Log:           "",
@@ -44,7 +44,7 @@ func onContainerHealthy(service string) {
 
 func onContainerHealthCheckFailure(service string) {
 	errorMessage := t.ErrorMessage{
-		Emoji:         ":red_circle:",
+		Emoji:         "🚨",
 		ServiceName:   service,
 		ServiceStatus: "unhealthy (running)",
 		Log:           "",

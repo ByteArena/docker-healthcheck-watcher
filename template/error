@@ -1,6 +1,1 @@
-{{.Emoji}}
-
-Service: {{.ServiceName}}
-Status: {{.ServiceStatus}}
-
-Ping @sven
+{{.Emoji}} {{.ServiceName}}: {{.ServiceStatus}} @sven
