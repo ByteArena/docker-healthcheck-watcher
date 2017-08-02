@@ -1,9 +1,6 @@
-An error occurred.
+{{.Emoji}}
 
 Service: {{.ServiceName}}
 Status: {{.ServiceStatus}}
-
-Log:
-{{.Log}}
 
 Ping @sven

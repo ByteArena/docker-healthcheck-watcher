@@ -14,6 +14,7 @@ import (
 
 func onContainerDieFailure(service string, exitCode string) {
 	errorMessage := t.ErrorMessage{
+		Emoji:         ":red_circle:",
 		ServiceName:   service,
 		ServiceStatus: "died (exited with code " + exitCode + ")",
 		Log:           "",
@@ -26,8 +27,24 @@ func onContainerDieFailure(service string, exitCode string) {
 	log.Println(service, "failure, sent message", output)
 }
 
+func onContainerHealthy(service string) {
+	errorMessage := t.ErrorMessage{
+		Emoji:         ":ok_hand:",
+		ServiceName:   service,
+		ServiceStatus: "ok",
+		Log:           "",
+	}
+
+	message := template.MakeTemplate(errorMessage)
+
+	output := slack.Publish(message)
+
+	log.Println(service, "sent message", output)
+}
+
 func onContainerHealthCheckFailure(service string) {
 	errorMessage := t.ErrorMessage{
+		Emoji:         ":red_circle:",
 		ServiceName:   service,
 		ServiceStatus: "unhealthy (running)",
 		Log:           "",
@@ -57,6 +74,10 @@ func main() {
 		case msg := <-stream:
 			if msg.Action == "health_status: unhealthy" {
 				onContainerHealthCheckFailure(msg.Actor.Attributes["image"])
+			}
+
+			if msg.Action == "health_status: healthy" {
+				onContainerHealthy(msg.Actor.Attributes["image"])
 			}
 
 			if msg.Action == "die" {
