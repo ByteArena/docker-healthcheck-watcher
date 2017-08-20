@@ -21,7 +21,7 @@ If Docker detects an unhealthy service, it will send a message to our tool and w
 
 ### Integrations
 
-At the moment only Slack is supported for alerting. The configuration is the following:
+At the moment only Slack is supported for alerting. The configuration (environment variables) is the following:
 
 ```yml
 # Slack endpoint with the authentication token
