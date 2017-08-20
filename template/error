@@ -1,1 +1,1 @@
-{{.Emoji}} {{.ServiceName}}: {{.ServiceStatus}} @sven
+{{.Emoji}} {{.ServiceName}}: {{.ServiceStatus}}
