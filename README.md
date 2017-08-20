@@ -1,8 +1,8 @@
 # docker-healthcheck-watcher
 
-> Monitor container healthchecks
-
 <img src="./.github/demo.png" />
+
+> Monitor container healthchecks
 
 ### The issue
 
