@@ -2,6 +2,8 @@
 
 > Monitor container healthchecks
 
+<img src="./.github/demo.png" />
+
 ### The issue
 
 If you are using a micro-service oriented architecture and you want to make sure all your services are up and running, you need some sort of application healthchecks.
