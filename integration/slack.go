@@ -16,12 +16,15 @@ type message struct {
 }
 
 func makeMessage(text string) message {
+	channel := os.Getenv("SLACK_CHANNEL")
+	username := os.Getenv("SLACK_USERNAME")
+	iconEmoji := os.Getenv("SLACK_ICONEMOJI")
 
 	return message{
-		Channel:   "#bytesarena",
-		Username:  "dockerwatcher",
+		Channel:   channel,
+		Username:  username,
 		Text:      text,
-		IconEmoji: ":robot_face:",
+		IconEmoji: iconEmoji,
 	}
 }
 
