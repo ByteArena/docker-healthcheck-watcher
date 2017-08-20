@@ -36,3 +36,17 @@ SLACK_USERNAME: "dockerwatcher"
 # Emoji to use as the icon for this message
 SLACK_ICONEMOJI: ":robot_face:"
 ```
+
+### Build and run
+
+The binary is in the `cmd/daemon` folder.
+
+Build:
+```sh
+go build
+```
+
+And run the daemon:
+```sh
+./daemon
+```
