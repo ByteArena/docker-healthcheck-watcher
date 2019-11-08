@@ -17,7 +17,7 @@ func MakeTemplate(s types.ErrorMessage) string {
 
 	//create a new template with some name
 	tmpl := template.New("test")
-	content, getTemplateErr := getTemplateContent("../../template/error")
+	content, getTemplateErr := getTemplateContent("./template/error")
 
 	if getTemplateErr != nil {
 		log.Panicln(getTemplateErr)
