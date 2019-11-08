@@ -15,8 +15,4 @@ fi
 echo '##vso[task.setvariable variable=REGISTRY]stratsys.azurecr.io'
 
 # Per project, should change every time
-echo '##vso[task.setvariable variable=REPOSITORY]stratsys-service'
-
-# Custom
-echo '##vso[task.setvariable variable=PACKAGE_NAME]Stratsys.Service.Proto'
-echo '##vso[task.setvariable variable=MYGET_URL]https://www.myget.org/F/stratsys-feed/api/v2/package'
+echo '##vso[task.setvariable variable=REPOSITORY]docker-healthcheck-watcher'
