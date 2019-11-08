@@ -1,11 +1,4 @@
-FROM golang:1.8-stretch
+FROM scratch
+ADD ./docker-healthcheck-watcher /docker-healthcheck-watcher
 
-ENV APP_HOME $GOPATH/src/github.com/bytearena/docker-healthcheck-watcher
-
-COPY . $APP_HOME
-
-WORKDIR $APP_HOME/cmd/daemon
-RUN go get -v ./...
-RUN go build
-
-CMD ["daemon"]
+ENTRYPOINT ["./docker-healthcheck-watcher"]

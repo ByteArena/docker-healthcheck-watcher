@@ -1,0 +1,34 @@
+steps:
+  - script: |
+      . build_variables.sh
+    displayName: 'Set variables'
+  - script: |
+      . build_backend.sh
+    displayName: 'Backend build'
+  - script: |
+      . build_docker.sh
+    displayName: 'Create docker image'
+    condition: and(succeeded(),ne(variables['Build.Reason'], 'PullRequest'))
+variables:
+  - name: RELEASE_BRANCH
+    value: $(Build.SourceBranchName)
+  - name: COMPLETE_RELEASE_BRANCH
+    value: $(Build.SourceBranch)
+  - name: GIT_COMMIT_SHA
+    value: $(Build.SourceVersion)
+  - group: "Azure container registry - stratsys"
+  - group: "MyGet - stratsys"
+#For more info about triggers, se https://docs.microsoft.com/en-us/azure/devops/pipelines/build/triggers?view=azure-devops&tabs=yaml
+trigger:
+  branches:
+    include:
+      - master
+  tags:
+    include:
+      - v* #vX.Y.Z
+pr:
+  branches:
+    include:
+      - master
+
+pool: "Linux-Docker"
