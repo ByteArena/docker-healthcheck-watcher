@@ -31,6 +31,8 @@ github.com/docker/go-units
 github.com/opencontainers/go-digest
 # github.com/pkg/errors v0.8.1
 github.com/pkg/errors
+# github.com/stratsys/go-common v0.2.2
+github.com/stratsys/go-common/env
 # golang.org/x/net v0.0.0-20191108063844-7e6e90b9ea88
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp

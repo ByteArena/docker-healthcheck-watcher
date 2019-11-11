@@ -3,13 +3,15 @@ package main
 import (
 	"context"
 	"log"
+	"os"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 
-	"github.com/bytearena/docker-healthcheck-watcher/integration"
+	slack "github.com/bytearena/docker-healthcheck-watcher/integration"
 	"github.com/bytearena/docker-healthcheck-watcher/template"
 	t "github.com/bytearena/docker-healthcheck-watcher/types"
+	"github.com/stratsys/go-common/env"
 )
 
 func onContainerDieFailure(service string, exitCode string) {
@@ -58,6 +60,17 @@ func onContainerHealthCheckFailure(service string) {
 }
 
 func main() {
+	kvps := make(map[string]string)
+	for _, file := range os.Args[1:] {
+		if err := env.ReadFiles(file, kvps); err != nil {
+			panic(err)
+		}
+	}
+
+	for k, v := range kvps {
+		os.Setenv(k, v)
+	}
+
 	cli, clientError := client.NewEnvClient()
 	ctx := context.Background()
 

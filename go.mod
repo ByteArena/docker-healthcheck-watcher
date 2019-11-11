@@ -9,5 +9,6 @@ require (
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
+	github.com/stratsys/go-common v0.2.2
 	golang.org/x/net v0.0.0-20191108063844-7e6e90b9ea88 // indirect
 )
