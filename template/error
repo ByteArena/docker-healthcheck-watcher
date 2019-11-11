@@ -1,1 +1,1 @@
-{{.Emoji}} {{.ServiceName}}: {{.ServiceStatus}}
+{{.Emoji}} {{.ServiceName}} {{.HostName}}: {{.ServiceStatus}}

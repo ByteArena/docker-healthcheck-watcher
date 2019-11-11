@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io/ioutil"
 	"log"
+	"os"
 	"text/template"
 
 	"github.com/bytearena/docker-healthcheck-watcher/types"
@@ -14,6 +15,9 @@ func getTemplateContent(filename string) ([]byte, error) {
 }
 
 func MakeTemplate(s types.ErrorMessage) string {
+	if s.HostName == "" {
+		s.HostName, _ = os.Hostname()
+	}
 
 	//create a new template with some name
 	tmpl := template.New("test")
