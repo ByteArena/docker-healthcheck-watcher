@@ -6,57 +6,29 @@ import (
 	"os"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/events"
 	"github.com/docker/docker/client"
 
-	slack "github.com/bytearena/docker-healthcheck-watcher/integration"
-	"github.com/bytearena/docker-healthcheck-watcher/template"
-	t "github.com/bytearena/docker-healthcheck-watcher/types"
+	"github.com/bytearena/docker-healthcheck-watcher/alertnotification"
 	"github.com/stratsys/go-common/env"
 )
 
-func onContainerDieFailure(service string, exitCode string) {
-	errorMessage := t.ErrorMessage{
-		Emoji:         ":red_circle:",
-		ServiceName:   service,
-		ServiceStatus: "died (exited with code " + exitCode + ")",
-		Log:           "",
+func onContainerDieFailure(service string, exitCode string, attributes map[string]string) {
+	if err := alertnotification.NewMsTeam("ff5864", service, "died (exited with code "+exitCode+")", attributes).Send(); err != nil {
+		log.Panicln(err)
 	}
-
-	message := template.MakeTemplate(errorMessage)
-
-	output := slack.Publish(message)
-
-	log.Println(service, "failure, sent message", output)
 }
 
-func onContainerHealthy(service string) {
-	errorMessage := t.ErrorMessage{
-		Emoji:         ":+1:",
-		ServiceName:   service,
-		ServiceStatus: "ok",
-		Log:           "",
+func onContainerHealthy(service string, attributes map[string]string) {
+	if err := alertnotification.NewMsTeam("90ee90", service, "ok", attributes).Send(); err != nil {
+		log.Panicln(err)
 	}
-
-	message := template.MakeTemplate(errorMessage)
-
-	output := slack.Publish(message)
-
-	log.Println(service, "sent message", output)
 }
 
-func onContainerHealthCheckFailure(service string) {
-	errorMessage := t.ErrorMessage{
-		Emoji:         "🚨",
-		ServiceName:   service,
-		ServiceStatus: "unhealthy (running)",
-		Log:           "",
+func onContainerHealthCheckFailure(service string, attributes map[string]string) {
+	if err := alertnotification.NewMsTeam("ff5864", service, "unhealthy (running)", attributes).Send(); err != nil {
+		log.Panicln(err)
 	}
-
-	message := template.MakeTemplate(errorMessage)
-
-	output := slack.Publish(message)
-
-	log.Println(service, "failure, sent message", output)
 }
 
 func main() {
@@ -85,21 +57,35 @@ func main() {
 		case msg := <-err:
 			log.Panicln(msg)
 		case msg := <-stream:
-			if msg.Action == "health_status: unhealthy" {
-				onContainerHealthCheckFailure(msg.Actor.Attributes["image"])
-			}
-
-			if msg.Action == "health_status: healthy" {
-				onContainerHealthy(msg.Actor.Attributes["image"])
-			}
-
-			if msg.Action == "die" {
-				exitCode := msg.Actor.Attributes["exitCode"]
-
-				if exitCode != "0" {
-					onContainerDieFailure(msg.Actor.Attributes["image"], exitCode)
-				}
-			}
+			go func(msg events.Message) {
+				handleMessage(msg)
+			}(msg)
 		}
 	}
+}
+
+func handleMessage(msg events.Message) {
+	if msg.Action == "health_status: unhealthy" {
+		onContainerHealthCheckFailure(getServiceName(msg.Actor.Attributes), msg.Actor.Attributes)
+	}
+
+	if msg.Action == "health_status: healthy" {
+		onContainerHealthy(getServiceName(msg.Actor.Attributes), msg.Actor.Attributes)
+	}
+
+	if msg.Action == "die" {
+		exitCode := msg.Actor.Attributes["exitCode"]
+
+		if exitCode != "0" {
+			onContainerDieFailure(getServiceName(msg.Actor.Attributes), exitCode, msg.Actor.Attributes)
+		}
+	}
+}
+
+func getServiceName(attributes map[string]string) string {
+	if nm, ok := attributes["com.docker.swarm.service.name"]; ok {
+		return nm
+	}
+
+	return attributes["image"]
 }
