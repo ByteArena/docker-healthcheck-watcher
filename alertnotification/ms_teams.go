@@ -52,10 +52,10 @@ func NewMsTeam(color, title, activitySubTitle string, attributes map[string]stri
 		Context:    "http://schema.org/extensions",
 		Summary:    os.Getenv("MS_TEAMS_CARD_SUBJECT"),
 		ThemeColor: color,
-		Title:      title,
+		Title:      title + " " + activitySubTitle,
 		Sections: []SectionStruct{
 			SectionStruct{
-				ActivityTitle:    os.Getenv("MS_TEAMS_CARD_SUBJECT"),
+				ActivityTitle:    title + " " + activitySubTitle,
 				ActivitySubtitle: activitySubTitle,
 				ActivityImage:    "",
 				Facts:            facts,
