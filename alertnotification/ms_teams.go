@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -99,7 +100,7 @@ func (card *MsTeam) Send() (err error) {
 		return err
 	}
 	if string(respBody) != "1" {
-		return errors.New("Cannot push to MsTeams")
+		return fmt.Errorf("Teams WebHook returned %s", respBody)
 	}
 	return
 }
