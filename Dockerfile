@@ -8,4 +8,4 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /build/docker-healthcheck-watcher /docker-healthcheck-watcher
 COPY --from=builder /build/template /template
 
-ENTRYPOINT ["./docker-healthcheck-watcher"]
+ENTRYPOINT ["/docker-healthcheck-watcher"]
