@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"sort"
 	"time"
 )
 
@@ -40,13 +41,16 @@ type FactStruct struct {
 // NewMsTeam is used to create MsTeam
 func NewMsTeam(color, title, activitySubTitle string, attributes map[string]string) *MsTeam {
 	facts := make([]FactStruct, 0)
-	hostname, _ := os.Hostname()
-
-	facts = append(facts, FactStruct{Name: "Hostname", Value: hostname})
-
 	for k, v := range attributes {
 		facts = append(facts, FactStruct{Name: k, Value: v})
 	}
+
+	sort.Slice(facts, func(i, j int) bool {
+		return facts[i].Name < facts[j].Name
+	})
+
+	hostname, _ := os.Hostname()
+	facts = append([]FactStruct{FactStruct{Name: "Hostname", Value: hostname}}, facts...)
 
 	notificationCard := MsTeam{
 		Type:       "MessageCard",
@@ -63,6 +67,7 @@ func NewMsTeam(color, title, activitySubTitle string, attributes map[string]stri
 			},
 		},
 	}
+
 	return &notificationCard
 }
 
@@ -80,7 +85,7 @@ func (card *MsTeam) Send() (err error) {
 
 	wb := os.Getenv("MS_TEAMS_WEBHOOK")
 	if len(wb) == 0 {
-		return errors.New("Cannot sent alert to MsTeams.MS_TEAMS_WEBHOOK is not set in the environment. ")
+		return errors.New("Cannot sent alert to MsTeams. MS_TEAMS_WEBHOOK is not set in the environment. ")
 	}
 	request, err := http.NewRequest("POST", wb, bytes.NewBuffer(requestBody))
 	request.Header.Set("Content-type", "application/json")
