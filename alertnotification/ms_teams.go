@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"sort"
@@ -72,7 +73,7 @@ func NewMsTeam(color, title, activitySubTitle string, attributes map[string]stri
 }
 
 // Send is implementation of interface AlertNotification's Send()
-func (card *MsTeam) Send() (err error) {
+func (card *MsTeam) Send() error {
 	requestBody, err := json.Marshal(card)
 	if err != nil {
 		return err
@@ -107,5 +108,16 @@ func (card *MsTeam) Send() (err error) {
 	if string(respBody) != "1" {
 		return fmt.Errorf("Teams WebHook returned %s", respBody)
 	}
-	return
+	return nil
+}
+
+// DeferSend send the card in the background
+func (card *MsTeam) DeferSend() error {
+	go func() {
+		if err := card.Send(); err != nil {
+			log.Panicln(err)
+		}
+	}()
+
+	return nil
 }

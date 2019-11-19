@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/events"
@@ -13,20 +14,25 @@ import (
 	"github.com/stratsys/go-common/env"
 )
 
+var (
+	seenServiceIDs map[string]bool      = make(map[string]bool)
+	deadServiceIDs map[string]time.Time = make(map[string]time.Time)
+)
+
 func onContainerDieFailure(service string, exitCode string, attributes map[string]string) {
-	if err := alertnotification.NewMsTeam("ff5864", service, "died (exited with code "+exitCode+")", attributes).Send(); err != nil {
+	if err := alertnotification.NewMsTeam("ff5864", service, "died (exited with code "+exitCode+")", attributes).DeferSend(); err != nil {
 		log.Panicln(err)
 	}
 }
 
 func onContainerHealthy(service string, attributes map[string]string) {
-	if err := alertnotification.NewMsTeam("90ee90", service, "ok", attributes).Send(); err != nil {
+	if err := alertnotification.NewMsTeam("90ee90", service, "ok", attributes).DeferSend(); err != nil {
 		log.Panicln(err)
 	}
 }
 
 func onContainerHealthCheckFailure(service string, attributes map[string]string) {
-	if err := alertnotification.NewMsTeam("ff5864", service, "unhealthy (running)", attributes).Send(); err != nil {
+	if err := alertnotification.NewMsTeam("ff5864", service, "unhealthy (running)", attributes).DeferSend(); err != nil {
 		log.Panicln(err)
 	}
 }
@@ -57,27 +63,37 @@ func main() {
 		case msg := <-err:
 			log.Panicln(msg)
 		case msg := <-stream:
-			go func(msg events.Message) {
-				handleMessage(msg)
-			}(msg)
+			handleMessage(msg)
 		}
 	}
 }
 
 func handleMessage(msg events.Message) {
+	serviceID := getServiceID(msg.Actor.Attributes)
+
 	if msg.Action == "health_status: unhealthy" {
+		seenServiceIDs[serviceID] = true
 		onContainerHealthCheckFailure(getServiceName(msg.Actor.Attributes), msg.Actor.Attributes)
 	}
 
 	if msg.Action == "health_status: healthy" {
-		onContainerHealthy(getServiceName(msg.Actor.Attributes), msg.Actor.Attributes)
+		if _, ok := seenServiceIDs[serviceID]; ok {
+			onContainerHealthy(getServiceName(msg.Actor.Attributes), msg.Actor.Attributes)
+		} else {
+			seenServiceIDs[serviceID] = true
+		}
 	}
 
 	if msg.Action == "die" {
+		seenServiceIDs[serviceID] = true
 		exitCode := msg.Actor.Attributes["exitCode"]
 
 		if exitCode != "0" {
-			onContainerDieFailure(getServiceName(msg.Actor.Attributes), exitCode, msg.Actor.Attributes)
+			now := time.Now()
+			if death, ok := deadServiceIDs[serviceID]; !ok || now.Sub(death) > 2*time.Minute {
+				deadServiceIDs[serviceID] = now
+				onContainerDieFailure(getServiceName(msg.Actor.Attributes), exitCode, msg.Actor.Attributes)
+			}
 		}
 	}
 }
@@ -88,4 +104,12 @@ func getServiceName(attributes map[string]string) string {
 	}
 
 	return attributes["image"]
+}
+
+func getServiceID(attributes map[string]string) string {
+	if id, ok := attributes["com.docker.swarm.service.id"]; ok {
+		return id
+	}
+
+	return ""
 }
